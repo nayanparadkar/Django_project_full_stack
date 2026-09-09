@@ -169,3 +169,62 @@ MAILERS = {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",
     },
 }
+
+# Production security defaults (override via environment variables)
+SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "False") == "True"
+# Honor the X-Forwarded-Proto header if sitting behind a proxy (e.g., Heroku, ELB)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if os.environ.get("DJANGO_SECURE_PROXY_SSL_HEADER", "True") == "True" else None
+
+SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
+SECURE_HSTS_PRELOAD = os.environ.get("DJANGO_SECURE_HSTS_PRELOAD", "False") == "True"
+
+SESSION_COOKIE_SECURE = os.environ.get("DJANGO_SESSION_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SECURE = os.environ.get("DJANGO_CSRF_COOKIE_SECURE", "False") == "True"
+X_FRAME_OPTIONS = os.environ.get("DJANGO_X_FRAME_OPTIONS", "DENY")
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Optional: use S3 for static/media in production. Requires 'django-storages[boto3]' installed
+USE_S3 = os.environ.get("DJANGO_USE_S3", "False") == "True"
+if USE_S3:
+    # Minimal S3 configuration - expects environment variables to be set in production
+    INSTALLED_APPS += ["storages"]
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN")
+
+    # Static files (CSS, JS)
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    if AWS_S3_CUSTOM_DOMAIN:
+        STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+    else:
+        STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/static/"
+
+    # Media files (user uploads)
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+else:
+    # Keep default WhiteNoise storage already defined above
+    pass
+
+# Logging: basic console logger for production
+LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "INFO")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {"format": "%(levelname)s %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+}
