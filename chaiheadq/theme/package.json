@@ -1,0 +1,13 @@
+{
+  "name": "chaiheadq-theme",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:tailwind": "tailwindcss -i ./src/input.css -o ../static/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.24",
+    "autoprefixer": "^10.4.14"
+  }
+}
