@@ -4,10 +4,12 @@
 FROM node:20-alpine AS node_builder
 WORKDIR /app
 COPY ./chaiheadq/theme/package.json ./chaiheadq/theme/package-lock.json* ./
+COPY ./chaiheadq/theme/src ./src
+COPY ./chaiheadq/theme/tailwind.config.cjs ./tailwind.config.cjs
+COPY ./chaiheadq/theme/postcss.config.cjs ./postcss.config.cjs
 RUN if [ -f package.json ]; then npm ci --legacy-peer-deps || npm install --legacy-peer-deps; fi
-# If you add Tailwind inputs, build them here
-# COPY ./chaiheadq/theme/src ./chaiheadq/theme/src
-# RUN npm run build || true
+# Build Tailwind CSS and place into the code static directory
+RUN if [ -f package.json ]; then npm run build:tailwind || true; fi
 
 # Python runtime stage
 FROM python:3.11-slim
