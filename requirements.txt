@@ -17,3 +17,4 @@ pytest-django==4.14.0
 coverage==7.2.7
 playwright==1.40.0
 
+django-storages[boto3]==1.13.2
