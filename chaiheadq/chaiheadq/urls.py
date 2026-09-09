@@ -32,3 +32,11 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # django-browser-reload requires its URLs to be included in DEBUG mode so
+    # the namespace 'django_browser_reload' is registered for the template tag
+    # and reverse() calls used by the layout.
+    try:
+        urlpatterns += [path('__reload__/', include('django_browser_reload.urls'))]
+    except Exception:
+        # If django_browser_reload isn't installed or import fails, skip.
+        pass
