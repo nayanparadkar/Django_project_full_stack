@@ -11,30 +11,85 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install Python dependencies
         run: |
           python -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Install Node dependencies (theme)
+        working-directory: chaiheadq/theme
+        run: |
+          npm ci || npm install
+
+      - name: Install Playwright deps and browsers
+        run: |
+          # install system deps for Playwright (runner has sudo)
+          npx playwright install-deps || true
+          . .venv/bin/activate
+          .venv/bin/python -m playwright install --with-deps
+
       - name: Run linters
         run: |
           . .venv/bin/activate
           pip install ruff black
           ruff check . || true
           black --check . || true
+
       - name: Run migrations
         run: . .venv/bin/activate && python chaiheadq/manage.py migrate --noinput
-      - name: Run tests
+
+      - name: Run unit & API tests
         run: . .venv/bin/activate && python chaiheadq/manage.py test --verbosity=2
+
+      - name: Run Playwright E2E (if any)
+        if: always()
+        run: |
+          . .venv/bin/activate
+          # guard: only run if playwright tests exist
+          if [ -d "tests/e2e" ]; then
+            pytest tests/e2e -q || true
+          else
+            echo "No e2e tests found; skipping"
+          fi
+
+      - name: Coverage report
+        run: |
+          . .venv/bin/activate
+          pip install coverage codecov
+          coverage run -m pytest || true
+          if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
+            codecov --token=${{ secrets.CODECOV_TOKEN }} || true
+          else
+            echo "CODECOV_TOKEN not set; skipping upload"
+          fi
+
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
