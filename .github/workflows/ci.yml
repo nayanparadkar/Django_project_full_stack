@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run linters
+        run: |
+          . .venv/bin/activate
+          pip install ruff black
+          ruff check . || true
+          black --check . || true
+      - name: Run migrations
+        run: . .venv/bin/activate && python chaiheadq/manage.py migrate --noinput
+      - name: Run tests
+        run: . .venv/bin/activate && python chaiheadq/manage.py test --verbosity=2
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: test/chaiheadq:latest

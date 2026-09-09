@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+venv/
+.venv/
+.env
+.DS_Store
+.idea/
+.vscode/
+*.log
+# Django local env
+*.env
+# Editor
+*.sublime-workspace
