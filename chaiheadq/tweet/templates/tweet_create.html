@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Tweet{% endblock %}
+
+{% block content %}
+  <h2>Create Tweet</h2>
+  <form id="tweet-form" method="post" enctype="multipart/form-data" action="{% url 'tweet_create' %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+      {{ form.content.label_tag }}
+      {{ form.content }}
+      {{ form.content.errors }}
+    </div>
+    <div class="mb-3">
+      {{ form.photo.label_tag }}
+      {{ form.photo }}
+      {{ form.photo.errors }}
+    </div>
+    <button class="btn btn-primary" type="submit">Post</button>
+  </form>
+{% endblock %}
