@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 db.sqlite3
+*.sqlite3-journal
 media/
 staticfiles/
 venv/
@@ -15,3 +16,7 @@ venv/
 *.env
 # Editor
 *.sublime-workspace
+
+# Node
+node_modules/
+npm-debug.log*
