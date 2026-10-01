@@ -1,4 +1,4 @@
-# Chai aur Tweet
+# chai-tweet
 
 A small Twitter-like Django app.
 
