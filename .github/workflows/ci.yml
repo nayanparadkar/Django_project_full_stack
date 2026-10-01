@@ -50,9 +50,11 @@ jobs:
           npm ci || npm install
 
       - name: Install Playwright deps and browsers
+        # There are no E2E tests yet (no tests/e2e directory), so
+        # downloading ~400MB of browsers on every run is wasted time.
+        # Re-enable this together with the E2E suite.
+        if: hashFiles('tests/e2e/**') != ''
         run: |
-          # install system deps for Playwright (runner has sudo)
-          npx playwright install-deps || true
           . .venv/bin/activate
           .venv/bin/python -m playwright install --with-deps
 
@@ -70,15 +72,10 @@ jobs:
         run: . .venv/bin/activate && python chaiheadq/manage.py test --verbosity=2
 
       - name: Run Playwright E2E (if any)
-        if: always()
+        if: always() && hashFiles('tests/e2e/**') != ''
         run: |
           . .venv/bin/activate
-          # guard: only run if playwright tests exist
-          if [ -d "tests/e2e" ]; then
-            pytest tests/e2e -q || true
-          else
-            echo "No e2e tests found; skipping"
-          fi
+          pytest tests/e2e -q
 
       - name: Coverage report
         run: |
